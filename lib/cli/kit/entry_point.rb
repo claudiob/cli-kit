@@ -7,6 +7,10 @@ module CLI
     class EntryPoint
       # Interface methods: You may want to implement these:
 
+      def self.command_registry
+        raise NotImplementedError
+      end
+
       def self.before_initialize(args)
         nil
       end
@@ -49,17 +53,13 @@ module CLI
         @args = args
 
         ret = self.class.handle_abort do
-          @command, @command_name = lookup_command(command_name)
+          @command, @command_name = self.class.command_registry.lookup_command(command_name)
           :success
         end
 
         if ret != :success
           exit CLI::Kit::EXIT_FAILURE_BUT_NOT_BUG
         end
-      end
-
-      def lookup_command(name)
-        CLI::Kit::CommandRegistry.registry_target.lookup_command(name)
       end
 
       def self.format_error_message(msg)
@@ -94,7 +94,7 @@ module CLI
       end
 
       def self.commands_and_aliases
-        reg = CLI::Kit::CommandRegistry.registry_target
+        reg = command_registry
         reg.command_names + reg.aliases.keys
       end
 
